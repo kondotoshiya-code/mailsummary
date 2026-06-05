@@ -4,10 +4,22 @@
  * Google Chat に要約を送る Google Apps Script。
  *
  * 使い方は docs/apps-script手順.md を参照。
- * 必要な設定（プロジェクトの設定 → スクリプト プロパティ に登録）:
- *   GEMINI_API_KEY    … Google AI Studio で取得した無料APIキー
- *   CHAT_WEBHOOK_URL  … Google Chat スペースの Webhook URL
  */
+
+/* ===================================================================== */
+/*  ▼▼▼ ここに2つの値を貼り付けてください（クォート「'」の間だけ） ▼▼▼   */
+/* ===================================================================== */
+
+// ① Gemini の APIキー（AIza... で始まる文字列）
+var GEMINI_API_KEY = 'ここにGeminiのAPIキーを貼る';
+
+// ② Google Chat の Webhook URL（https://chat.googleapis.com/... ）
+var CHAT_WEBHOOK_URL = 'ここにGoogle ChatのWebhook URLを貼る';
+
+/* ===================================================================== */
+/*  ▲▲▲ 貼り付けるのはこの2つだけ。これより下は触らなくてOK ▲▲▲        */
+/* ===================================================================== */
+
 
 // 使用する Gemini モデル（無料枠で利用可）。必要なら変更可。
 var GEMINI_MODEL = 'gemini-2.0-flash';
@@ -61,10 +73,9 @@ function runTestNow() {
  * これが届けば Webhook はOK。届かなければ Webhook URL の問題。
  */
 function testWebhookOnly() {
-  var props = PropertiesService.getScriptProperties();
-  var webhook = props.getProperty('CHAT_WEBHOOK_URL');
+  var webhook = cfgValue_(CHAT_WEBHOOK_URL, 'CHAT_WEBHOOK_URL');
   if (!webhook) {
-    throw new Error('CHAT_WEBHOOK_URL が未登録です。プロジェクトの設定 → スクリプト プロパティ で登録してください。');
+    throw new Error('コード上部の CHAT_WEBHOOK_URL に Webhook URL を貼り付けてください。');
   }
   var res = UrlFetchApp.fetch(webhook, {
     method: 'post',
@@ -113,14 +124,22 @@ function mailSummary_(afterEpoch, slotLabelText) {
 
 /* ===================== 設定の読み込み ===================== */
 
+// コード上部の値を優先。空（プレースホルダのまま）ならスクリプト プロパティを見る。
+function cfgValue_(codeValue, propName) {
+  if (codeValue && codeValue.indexOf('ここに') === -1) {
+    return codeValue.trim();
+  }
+  var p = PropertiesService.getScriptProperties().getProperty(propName);
+  return p ? p.trim() : '';
+}
+
 function getConfig_() {
-  var props = PropertiesService.getScriptProperties();
-  var key = props.getProperty('GEMINI_API_KEY');
-  var webhook = props.getProperty('CHAT_WEBHOOK_URL');
+  var key = cfgValue_(GEMINI_API_KEY, 'GEMINI_API_KEY');
+  var webhook = cfgValue_(CHAT_WEBHOOK_URL, 'CHAT_WEBHOOK_URL');
   if (!key || !webhook) {
     throw new Error(
-      'スクリプト プロパティに GEMINI_API_KEY と CHAT_WEBHOOK_URL を登録してください。' +
-      '（プロジェクトの設定 → スクリプト プロパティ）'
+      'コード上部の GEMINI_API_KEY と CHAT_WEBHOOK_URL に値を貼り付けてください' +
+      '（クォート「\'」の間に貼る）。'
     );
   }
   return { key: key, webhook: webhook };
