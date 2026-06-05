@@ -1,0 +1,12 @@
+# 認証情報・秘密情報は絶対にコミットしない
+credentials.json
+token.json
+*.env
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
