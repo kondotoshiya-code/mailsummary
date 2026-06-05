@@ -57,6 +57,30 @@ function runTestNow() {
 
 
 /**
+ * 【切り分け用】Gmail も Gemini も使わず、Google Chat に固定メッセージだけ送る。
+ * これが届けば Webhook はOK。届かなければ Webhook URL の問題。
+ */
+function testWebhookOnly() {
+  var props = PropertiesService.getScriptProperties();
+  var webhook = props.getProperty('CHAT_WEBHOOK_URL');
+  if (!webhook) {
+    throw new Error('CHAT_WEBHOOK_URL が未登録です。プロジェクトの設定 → スクリプト プロパティ で登録してください。');
+  }
+  var res = UrlFetchApp.fetch(webhook, {
+    method: 'post',
+    contentType: 'application/json; charset=UTF-8',
+    payload: JSON.stringify({ text: '✅ Webhookテスト：これが届けば送信先の設定はOKです。' }),
+    muteHttpExceptions: true
+  });
+  Logger.log('応答コード: ' + res.getResponseCode());
+  Logger.log('応答本文: ' + res.getContentText());
+  if (res.getResponseCode() >= 300) {
+    throw new Error('Webhook送信に失敗 (' + res.getResponseCode() + '): ' + res.getContentText());
+  }
+}
+
+
+/**
  * トリガーから呼ばれる本番関数。
  */
 function mailSummary() {
